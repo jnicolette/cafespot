@@ -1,7 +1,7 @@
 // js/config.js — CafeSpot configuration
 
 const CONFIG = {
-  GOOGLE_API_KEY: 'AIzaSyAyhvagv40seo7ezXCU1n0h9v_UtwcjqkY',
+  GOOGLE_API_KEY: 'AIzaSyBBH5WNN660-YNrkQnGopV8y4cPOatnwNw',
   SEARCH_RADIUS_METERS: 5000,
   PLACE_TYPE: 'cafe',
   MAX_RESULTS: 20,

@@ -12,7 +12,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)  # Allow requests from the frontend
 
-API_KEY = "AIzaSyAyhvagv40seo7ezXCU1n0h9v_UtwcjqkY"
+API_KEY = "AIzaSyBBH5WNN660-YNrkQnGopV8y4cPOatnwNw"
 
 GEOCODING_URL      = "https://maps.googleapis.com/maps/api/geocode/json"
 PLACES_URL         = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
