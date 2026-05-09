@@ -269,3 +269,75 @@ def health():
 if __name__ == "__main__":
     print("🚀 CafeSpot backend running on http://localhost:5000")
     app.run(debug=True, port=5000)
+
+
+# ─── Street View ──────────────────────────────────────────────────────────────
+
+STREETVIEW_METADATA_URL = "https://maps.googleapis.com/maps/api/streetview/metadata"
+STREETVIEW_IMAGE_URL    = "https://maps.googleapis.com/maps/api/streetview"
+
+@app.route("/api/streetview")
+def get_streetview():
+    """
+    Proxy Street View Static API image.
+    Query params: lat, lng, width, height
+    First checks metadata to confirm Street View is available at the location.
+    """
+    lat    = request.args.get("lat", "")
+    lng    = request.args.get("lng", "")
+    width  = request.args.get("width",  "600")
+    height = request.args.get("height", "300")
+
+    if not lat or not lng:
+        return jsonify({"error": "lat and lng required"}), 400
+
+    # Check metadata first — avoid blank grey images
+    meta_resp = requests.get(STREETVIEW_METADATA_URL, params={
+        "location": f"{lat},{lng}",
+        "key":      API_KEY,
+    }, timeout=10)
+
+    meta = meta_resp.json()
+    if meta.get("status") != "OK":
+        return jsonify({"available": False}), 404
+
+    # Fetch the actual Street View image
+    img_resp = requests.get(STREETVIEW_IMAGE_URL, params={
+        "location": f"{lat},{lng}",
+        "size":     f"{width}x{height}",
+        "fov":      "90",
+        "heading":  "0",
+        "pitch":    "0",
+        "key":      API_KEY,
+    }, timeout=10)
+
+    return Response(
+        img_resp.content,
+        content_type=img_resp.headers.get("Content-Type", "image/jpeg"),
+        status=img_resp.status_code,
+    )
+
+
+@app.route("/api/streetview/check")
+def check_streetview():
+    """
+    Check if Street View is available at a location without fetching the image.
+    Returns: { available: true/false }
+    """
+    lat = request.args.get("lat", "")
+    lng = request.args.get("lng", "")
+
+    if not lat or not lng:
+        return jsonify({"available": False})
+
+    meta_resp = requests.get(STREETVIEW_METADATA_URL, params={
+        "location": f"{lat},{lng}",
+        "key":      API_KEY,
+    }, timeout=10)
+
+    meta = meta_resp.json()
+    return jsonify({
+        "available": meta.get("status") == "OK",
+        "pano_id":   meta.get("pano_id"),
+        "copyright": meta.get("copyright"),
+    })

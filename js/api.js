@@ -34,7 +34,7 @@ const API = (() => {
       const err = await response.json().catch(() => ({}));
       throw new Error(err.error || 'Places search failed');
     }
-    return response.json(); // { cafes: [...] }
+    return response.json();
   }
 
   /**
@@ -51,7 +51,7 @@ const API = (() => {
       const err = await response.json().catch(() => ({}));
       throw new Error(err.error || 'Distance Matrix failed');
     }
-    return response.json(); // { distances: [{ place_id, distance_text, distance_value, duration_text }] }
+    return response.json();
   }
 
   /**
@@ -74,5 +74,32 @@ const API = (() => {
     return data.predictions || [];
   }
 
-  return { validateAndGeocode, searchCafes, getDistances, getPhotoUrl, autocomplete };
+  /**
+   * Get Street View image URL for a lat/lng.
+   */
+  function getStreetViewUrl(lat, lng, width = 600, height = 300) {
+    return `${CONFIG.BACKEND_URL}/api/streetview?lat=${lat}&lng=${lng}&width=${width}&height=${height}`;
+  }
+
+  /**
+   * Check if Street View is available at a location.
+   * Returns { available: bool, pano_id, copyright }
+   */
+  async function checkStreetView(lat, lng) {
+    try {
+      const response = await fetch(
+        `${CONFIG.BACKEND_URL}/api/streetview/check?lat=${lat}&lng=${lng}`
+      );
+      if (!response.ok) return { available: false };
+      return response.json();
+    } catch {
+      return { available: false };
+    }
+  }
+
+  return {
+    validateAndGeocode, searchCafes, getDistances,
+    getPhotoUrl, autocomplete,
+    getStreetViewUrl, checkStreetView,
+  };
 })();

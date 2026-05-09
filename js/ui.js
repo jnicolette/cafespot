@@ -111,7 +111,7 @@ const UI = (() => {
       if (!m.getLabel) return;
       const label = m.getLabel();
       if (!label) return;
-      const isActive = (i - 1) === index; // offset by center marker
+      const isActive = (i - 1) === index;
       m.setIcon({
         path: google.maps.SymbolPath.CIRCLE,
         scale: isActive ? 16 : 14,
@@ -166,16 +166,13 @@ const UI = (() => {
 
   function renderResults(cafes, suburbName, onCardClick) {
     hideLoading();
-
     if (!cafes || cafes.length === 0) { showEmpty(); return; }
 
-    // Header
     document.getElementById('results-header').classList.remove('hidden');
     document.getElementById('suburb-name').textContent = suburbName;
     document.getElementById('results-count').textContent =
       `${cafes.length} cafe${cafes.length !== 1 ? 's' : ''} found within 5km`;
 
-    // Grid
     const grid = document.getElementById('results-grid');
     grid.innerHTML = '';
 
@@ -228,18 +225,16 @@ const UI = (() => {
     });
     activeCardIndex = index;
     highlightMarker(index);
-
-    // Scroll card into view
     const cards = document.querySelectorAll('.cafe-card');
     if (cards[index]) {
       cards[index].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }
 
-  // ─── Modal ────────────────────────────────────────────────────────────────
+  // ─── Modal with Street View ───────────────────────────────────────────────
 
-  function openModal(cafe) {
-    const modal = document.getElementById('cafe-modal');
+  async function openModal(cafe) {
+    const modal   = document.getElementById('cafe-modal');
     const content = document.getElementById('modal-content');
 
     const photoHtml = cafe.photo_reference
@@ -259,6 +254,7 @@ const UI = (() => {
 
     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cafe.name)}&query_place_id=${cafe.place_id}`;
 
+    // Render modal immediately with a Street View loading placeholder
     content.innerHTML = `
       ${photoHtml}
       <div class="modal-body">
@@ -286,9 +282,22 @@ const UI = (() => {
           ${cafe.opening_hours != null ? `
           <div class="modal-detail-item">
             <div class="modal-detail-label">Status</div>
-            <div class="modal-detail-value ${cafe.opening_hours ? 'open' : ''}" style="color:${cafe.opening_hours ? '#5a7a50' : '#c0392b'}">${cafe.opening_hours ? '✅ Open now' : '❌ Closed'}</div>
+            <div class="modal-detail-value" style="color:${cafe.opening_hours ? '#5a7a50' : '#c0392b'}">${cafe.opening_hours ? '✅ Open now' : '❌ Closed'}</div>
           </div>` : ''}
         </div>
+
+        <!-- Street View Section — shows loading spinner while checking -->
+        <div class="streetview-section" id="streetview-section">
+          <div class="streetview-header">
+            <span class="streetview-title">📸 Street View</span>
+          </div>
+          <div class="streetview-loading" id="streetview-loading">
+            <div class="spinner" style="width:24px;height:24px;border-width:2px"></div>
+            <span>Loading street view…</span>
+          </div>
+          <div id="streetview-content"></div>
+        </div>
+
         ${hoursHtml}
         <a href="${mapsUrl}" target="_blank" rel="noopener" class="modal-directions-btn">
           🗺️ Get Directions
@@ -297,6 +306,49 @@ const UI = (() => {
     `;
 
     modal.classList.remove('hidden');
+
+    // Async: check & load Street View after modal is shown
+    loadStreetView(cafe);
+  }
+
+  async function loadStreetView(cafe) {
+    const loadingEl = document.getElementById('streetview-loading');
+    const contentEl = document.getElementById('streetview-content');
+    const sectionEl = document.getElementById('streetview-section');
+
+    if (!loadingEl || !contentEl) return;
+
+    try {
+      const check = await API.checkStreetView(cafe.lat, cafe.lng);
+
+      if (loadingEl) loadingEl.style.display = 'none';
+
+      if (!check.available) {
+        // Hide the section entirely if no street view available
+        if (sectionEl) sectionEl.style.display = 'none';
+        return;
+      }
+
+      const svUrl = API.getStreetViewUrl(cafe.lat, cafe.lng, 600, 280);
+      const mapsStreetViewUrl = `https://www.google.com/maps?q=${cafe.lat},${cafe.lng}&layer=c&cbll=${cafe.lat},${cafe.lng}`;
+
+      contentEl.innerHTML = `
+        <div class="streetview-wrapper">
+          <img
+            class="streetview-img"
+            src="${svUrl}"
+            alt="Street view of ${escapeHtml(cafe.name)}"
+            onerror="this.closest('.streetview-section').style.display='none'"
+          />
+          <a href="${mapsStreetViewUrl}" target="_blank" rel="noopener" class="streetview-open-btn">
+            🔍 Open in Google Maps
+          </a>
+          ${check.copyright ? `<div class="streetview-copyright">${escapeHtml(check.copyright)}</div>` : ''}
+        </div>
+      `;
+    } catch (e) {
+      if (sectionEl) sectionEl.style.display = 'none';
+    }
   }
 
   function closeModal() {
