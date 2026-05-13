@@ -267,7 +267,7 @@ def health():
 # ─── Run ──────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    print("🚀 CafeSpot backend running on http://localhost:5000")
+    print("CafeSpot backend running on http://localhost:5000")
     app.run(debug=True, port=5000)
 
 

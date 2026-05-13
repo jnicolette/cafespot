@@ -1,4 +1,4 @@
-# ☕ CafeSpot
+# CafeSpot
 
 Find Sydney's best cafes within 5km of any suburb, sorted nearest to farthest.
 
@@ -39,7 +39,7 @@ python app.py
 
 You should see:
 ```
-🚀 CafeSpot backend running on http://localhost:5000
+CafeSpot backend running on http://localhost:5000
 ```
 
 ### 3. Open the frontend
@@ -55,7 +55,7 @@ python -m http.server 8080
 
 Then open: `http://localhost:8080`
 
-> ⚠️ Make sure the Flask backend (`app.py`) is running on port 5000 before using the site.
+> Make sure the Flask backend (`app.py`) is running on port 5000 before using the site.
 
 ---
 
