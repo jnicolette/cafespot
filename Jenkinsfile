@@ -4,6 +4,8 @@ pipeline {
     environment {
         IMAGE_BACKEND  = 'cafespot-backend'
         IMAGE_FRONTEND = 'cafespot-frontend'
+        PYTHON = '"C:\\Users\\Jazlyn Nicolette\\AppData\\Local\\Programs\\Python\\Python311\\python.exe"'
+        PIP    = '"C:\\Users\\Jazlyn Nicolette\\AppData\\Local\\Programs\\Python\\Python311\\Scripts\\pip.exe"'
     }
 
     stages {
@@ -18,7 +20,7 @@ pipeline {
         stage('Lint & Validate') {
             steps {
                 echo 'Validating Python syntax...'
-                bat 'python -m py_compile app.py && echo app.py OK'
+                bat "%PYTHON% -m py_compile app.py && echo app.py OK"
                 echo 'Checking required files exist...'
                 bat '''
                     if exist index.html (echo index.html OK) else (exit 1)
@@ -35,9 +37,9 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 echo 'Installing Python dependencies...'
-                bat 'pip install -r requirements.txt'
+                bat "%PIP% install -r requirements.txt"
                 echo 'Verifying imports...'
-                bat 'python -c "import flask, flask_cors, requests; print(\'All imports OK\')"'
+                bat "%PYTHON% -c \"import flask, flask_cors, requests; print('All imports OK')\""
             }
         }
 
